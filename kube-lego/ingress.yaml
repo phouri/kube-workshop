@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "k8s-ingress"
+    kubernetes.io/tls-acme: "true"
+    kubernetes.io/ingress.class: "gce"
+spec:
+  tls:
+  - secretName: example-tls
+    hosts:
+      - example.com
+      - front.example.com 
+  backend:
+    serviceName: frontend
+    servicePort: 8080
+  rules:
+  - host: front.example.com
+    http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: frontend
+          servicePort: 8080
