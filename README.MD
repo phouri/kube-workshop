@@ -21,7 +21,7 @@ create `index.js` file
 
 add to it:
 
-```
+```js
 const express = require('express');
 const app = express();
 
@@ -39,7 +39,7 @@ app.listen('8005');
 ```
 #### Create Dockerfile
 
-```
+```docker
 from node:8.8.1
 ADD . .
 RUN npm install
@@ -51,7 +51,7 @@ CMD npm start
 
 #### Create kube deployments
 in the kube directory add the file `frontend-kube.yaml `
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -107,7 +107,7 @@ Gcloud already includes the L7 load balancer image that handles all this stuff s
 
 Create the `ingress.yaml` file under the kube dir
 
-```
+```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -156,7 +156,7 @@ We will use basic secrets (root/root) and we will put them using a config file, 
 
 Set your `secrets.yaml` file:
 
-```
+```yml
 apiVersion: v1
 kind: Secret
 metadata:
@@ -173,7 +173,7 @@ Setup the `mysql.yaml` for mysql deployment and service:
 
 This will create everything needed for a mysql, including a persisten volume that it will use
 
-```
+```yml
 apiVersion: v1
 kind: Service
 metadata:
@@ -237,7 +237,7 @@ spec:
 ```
 
 Upgrade your `index.js` to look like this:
-```
+```js
 const express = require('express');
 const app = express();
 const mysql = require('mysql2/promise');
