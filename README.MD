@@ -167,7 +167,7 @@ data:
   password: cm9vdA==
 ```
 
-Node: You can apply all configurations at once: `kubectl apply -f ./kube` should apply all yamls in the directory, it can also recrusively go over all files if you include the `-r` flag. https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
+Note: You can apply all configurations at once: `kubectl apply -f ./kube` should apply all yamls in the directory, it can also recrusively go over all files if you include the `-r` flag. https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
 
 Setup the `mysql.yaml` for mysql deployment and service:
 
@@ -369,4 +369,4 @@ for example in our mysql example:
 * RBAC - https://kubernetes.io/docs/admin/authorization/rbac/
 
 
-### **Don't forget to shurtdown the cluster ;)**
+### **Don't forget to shutdown the cluster ;)**
