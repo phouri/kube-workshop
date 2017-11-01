@@ -1,4 +1,4 @@
-from node:8.8.1
+from node:8.8.1-slim
 ADD . .
 RUN npm install
 

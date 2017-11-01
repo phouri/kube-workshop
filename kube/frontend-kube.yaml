@@ -22,7 +22,7 @@ spec:
       labels:
         app: frontend
     spec:
-      containers:    
+      containers:
       - image: gcr.io/turnkey-rookery-181318/frontend:v4
         name: frontend
         resources:
@@ -32,6 +32,18 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "150m"
+        readinessProbe:
+          httpGet:
+            path: /_readyz
+            port: app-port
+          initialDelaySeconds: 1
+          periodSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /_healthz
+            port: app-port
+          initialDelaySeconds: 1
+          periodSeconds: 5
         env:
         - name: MYSQL_ROOT_USER
           valueFrom:
@@ -44,4 +56,5 @@ spec:
               name: db-secret
               key: password           
         ports:
-          - containerPort: 8005
+          - name: app-port
+            containerPort: 8005

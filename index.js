@@ -55,6 +55,23 @@ app.get('/users', async (req, res) => {
   }
 });
 
+
+const now = Date.now();
+
+app.get('/_healthz', (req, res) => {
+  res.send('OK');
+});
+
+
+app.get('/_readyz', (req, res) => {
+  console.log('Readycheck');
+  if (Date.now() - now > 4000) {
+    res.send('OK');
+  }  else {
+    res.status(500).end();
+  }
+});
+
 app.get('/api', (req, res) => {
   for (let i = 0; i < 1e4; i++) {
     let a = process.env;

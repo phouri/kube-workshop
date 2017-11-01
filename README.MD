@@ -4,11 +4,16 @@ This walkthrough assumes you have gcloud sdk already configured and have a gclou
 
 ## Kubernetes 101
 Nodes, Pods, Deployments, Containers, Services, Master
+### Prerequisites
 
 #### Minikube
 [Minikube](https://github.com/kubernetes/minikube) is designed to make it easy running kubernetes locally. 
 
+#### GCP free tier account
+https://cloud.google.com/free/
 
+#### Gcloud SDK
+https://cloud.google.com/sdk/downloads
 ## 1 - Creating Basic App
 
 #### Creating basic app
@@ -25,6 +30,24 @@ add to it:
 const express = require('express');
 const app = express();
 
+//For later use
+app.get('/_healthz', (req, res) => {
+  console.log('Healthcheck');
+  res.send('OK');
+});
+
+const now = Date.now();
+
+app.get('/_readyz', (req, res) => {
+  console.log('Readycheck');
+  if (Date.now() - now > 15000) {
+    res.send('OK');
+  }  else {
+    res.status(500).end();
+  }
+});
+
+//API
 app.get('/api', (req, res) => {
   res.send({
     api: 'v1',
@@ -85,7 +108,7 @@ spec:
             cpu: "50m"
           limits:
             memory: "512Mi"
-            cpu: "150m"
+            cpu: "150m"        
         env:       
         ports:
           - containerPort: 8005
@@ -128,17 +151,53 @@ After a little while run `kubectl describe ingress ingress` and if all went well
 For minikube make sure you enable load balancer: `minikube addons enable ingress`
 
 Ingress are created by default with an elastic ip, creating a static ip is very straight forward: https://github.com/kelseyhightower/ingress-with-static-ip
-## 3 
-Adding auto scaler
+## 3 Health check and Autoscaling
 
 Now for some benefits of using Kubernetes (in short k8s)
 
-Let's add an auto scaler for our frontend service
+Let's add some basic Ready and Healthcheck for our pod:
+
+Change the `frontend.yaml` file to include the following:
+
+```yml
+containers:    
+      - image: gcr.io/turnkey-rookery-181318/frontend:v4
+        name: frontend
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "512Mi"
+            cpu: "150m"
+        readinessProbe:
+          httpGet:
+            path: /_readyz
+            port: app-port
+          initialDelaySeconds: 1
+          periodSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /_healthz
+            port: app-port
+          initialDelaySeconds: 1
+          periodSeconds: 5         
+        ports:
+          - name: app-port
+            containerPort: 8005
+```
+
+Now if we tell kubernetes to update the image - you will see that the pod is not ready for ~15-20 seconds, and only after ready is set it will start serving requests and the other pod will shutdown.
+
+
+Now let's add an auto scaler for our frontend service
 
 `kubectl autoscale deployment frontend --cpu-percent=65 --min=1 --max=5`
 
 This is pretty straight forwards, it tells K8s to have a minimum of 1 and max of 5, and start increasing when average CPU is > 65
-Autoscaler supports advanced customizations to include also memory and even application reported metrics for auto scaling.
+In K8s v1.8 Autoscaler supports advanced customizations to include many more metrics - even application reported metrics for auto scaling.
+
+There is also cluster autoscaler - which is still in beta - which will increase the size of your cluster if there is not enough CPU/Mem to serve all pods by getting more VMs into the node pool.
 
 ## 4 Secrets
 Let's spice things up
@@ -356,7 +415,15 @@ CICD is very straight forward.
 
 ## 10 Caveats Running Locally 
 
+#### Contexts 
+
+If you use both minikube and GKE you will want to switch what kubectl refers to, this is done using `kubectl config get-contexts` and `kubectl config use-context`.
+
+#### Minkube docker daemon
+
 To make sure the docker is used by minikube run: `eval $(minikube docker-env)`
+
+#### Minikube proxy 
 
 If you want to run your development environment not via docker, you can expose all the services with the minikube - 
 for example in our mysql example: 
@@ -367,6 +434,6 @@ for example in our mysql example:
 
 * Network Policy - https://cloud.google.com/container-engine/docs/network-policy Inter pod communication firewall
 * RBAC - https://kubernetes.io/docs/admin/authorization/rbac/
-
-
+* Running Spark on Kubernetes - https://apache-spark-on-k8s.github.io/userdocs/running-on-kubernetes.html
+* Kubernetes on AWS - https://aws.amazon.com/blogs/compute/kubernetes-clusters-aws-kops/
 ### **Don't forget to shutdown the cluster ;)**
